@@ -1,0 +1,62 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local mouse = LocalPlayer:GetMouse()
+local lastplayer = nil
+
+local HighlightMouse = Instance.new("Highlight")
+HighlightMouse.Name = "HighlightMouse"
+HighlightMouse.Enabled = true
+HighlightMouse.FillColor = Color3.new(1, 0, 0) -- Changed to proper Color3 values
+HighlightMouse.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+HighlightMouse.FillTransparency = 0.5
+
+mouse.Move:Connect(function()
+	local target = mouse.Target
+
+	if target and target.Parent and target.Parent.Name ~= lastplayer then
+		local humanoid = target.Parent:FindFirstChild("Humanoid")
+
+		if lastplayer ~= nil then
+			
+			local findpl = game:GetService("Workspace"):FindFirstChild(lastplayer)
+			if findpl then
+				if findpl:FindFirstChild("HighlightMouse") then
+					findpl:FindFirstChild("HighlightMouse"):Destroy()
+					lastplayer = nil
+				end
+			end
+		end
+
+		if humanoid and target.Parent.Name ~= lastplayer then
+			local targetPosition = target.Position
+			local playerPosition = LocalPlayer.Character:FindFirstChild("Left Leg").Position
+			local distance = (targetPosition - playerPosition).Magnitude
+
+			if distance <= 611 then
+				if not mouse.Target.Parent:FindFirstChild("HighlightMouse") then
+					lastplayer = mouse.Target.Parent.Name
+					local copy = HighlightMouse:Clone()
+					copy.Parent = mouse.Target.Parent
+				end
+			end
+		end
+	end
+end)
+
+local UserInputService = game:GetService("UserInputService")
+
+UserInputService.InputBegan:Connect(function(input)
+	if input.KeyCode == Enum.KeyCode.G then
+		for i, v in pairs(LocalPlayer.Character:GetChildren()) do
+			if v:IsA("Tool") then
+				if v:FindFirstChild("DamageRemote") then
+					local args = {
+						[1] = game:GetService("Workspace"):FindFirstChild(lastplayer):FindFirstChild("Humanoid")
+					}
+
+					v.DamageRemote:FireServer(unpack(args))
+				end
+			end
+		end
+	end
+end)
